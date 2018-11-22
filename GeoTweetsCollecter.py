@@ -1,0 +1,213 @@
+import sys
+import os
+import tweepy
+from datetime import datetime
+
+# global parameters
+out_file_name = ''
+
+
+class GeoTweetsCollecter(tweepy.StreamListener):
+    '''
+    handler for the tweets stream
+    '''
+
+    def on_status(self, status):
+        row = scrape(status)
+        if row != '':
+            print(row)
+            save(row)
+
+    def on_error(self, status_code):
+        print('Error: status code ({})'.format(status_code))
+        return True
+
+    def on_timeout(self):
+        print('Timeout...')
+        return True
+
+
+def save(row):
+    '''
+    appends the new tweet to the end of the dataset
+    '''
+
+    if not os.path.exists(out_file_name):
+        with open(out_file_name, 'a') as f:
+            f.write('id_tweet\tid_user\tcreation_data\tcoordinates\ttext\n')
+
+    with open(out_file_name, 'a') as f:
+        f.write(row)
+
+
+def set_parameters(conf_file):
+    '''
+    get parameters from the configuration file
+    '''
+
+    # get path to configuration file
+    conf_file = os.path.abspath(conf_file)
+
+    # check if conf_file exist
+    if not os.path.exists(conf_file):
+        print('error: "{}" not exist'.format(conf_file))
+        sys.exit()
+
+    with open(conf_file, 'r') as f:
+        pars = f.read().split('\n')
+
+    parameters = {}
+    for par in pars:
+        if '=' in par:
+            tag, value = par.split('=')
+            tag = tag.strip()
+            value = value.strip()
+
+            if tag == 'OUT_FILE':
+                parameters['out_file'] = value
+            elif tag == 'RETRY_DELAY':
+                parameters['retry_delay'] = float(value)
+            elif tag == 'TIMEOUT':
+                parameters['timeout'] = float(value)
+            elif tag == 'COORDINATES':
+                lat1, lon1, lat2, lon2 = value.split(',')
+                parameters['coordinates'] = [float(lat1),
+                                             float(lon1),
+                                             float(lat2),
+                                             float(lon2)]
+            else:
+                print('error: parameter "{}" not recognized'.format(tag))
+                sys.exit(main(sys.argv))
+
+    # checksum
+    if len(parameters) != 4:
+        print('error: some parameter is missing')
+        sys.exit()
+
+    return parameters
+
+
+def authenticate(conf_file):
+        '''
+        get the twitter API tokens from the configuration file and authenticate
+        on twitter api
+        '''
+
+        # get path to configuration file
+        conf_file = os.path.abspath(conf_file)
+
+        # check if conf_file exist
+        if not os.path.exists(conf_file):
+            print('error: "{}" not exist'.format(conf_file))
+            sys.exit(main(sys.argv))
+
+        with open(conf_file, 'r') as f:
+            pars = f.read().split('\n')
+
+        parameters = {}
+        for par in pars:
+            if '=' in par:
+                tag, value = par.split('=')
+                tag = tag.strip()
+                value = value.strip()
+
+                if tag == 'CONSUMER_KEY':
+                    parameters['consumer_key'] = value
+                elif tag == 'CONSUMER_SECRET':
+                    parameters['consumer_secret'] = value
+                elif tag == 'ACCESS_TOKEN':
+                    parameters['access_token'] = value
+                elif tag == 'ACCESS_TOKEN_SECRET':
+                    parameters['access_token_secret'] = value
+                else:
+                    print('error: parameter "{}" not recognized'.format(tag))
+                    sys.exit()
+
+        # check if all parameters were captured, if not return error
+        if len(parameters) != 4:
+            print('error: some parameter is missing')
+            sys.exit(main(sys.argv))
+
+        # Authentication for twitter api
+        auth = tweepy.OAuthHandler(parameters['consumer_key'],
+                                   parameters['consumer_secret'])
+        auth.set_access_token(parameters['access_token'],
+                              parameters['access_token_secret'])
+
+        return auth
+
+
+def sanitize(s):
+    '''
+    remove tabs
+    '''
+    while '\t' in s or '\n' in s:
+        s = s.replace('\t', ' ')
+        s = s.replace('\n', ' ')
+
+    return s
+
+
+def scrape(raw):
+    '''
+    take in unput the raw json comes from the stream and return a line that
+    represent the tweet where each field is separated by a tab
+    '''
+    tweet = raw._json
+
+    # if tweet is not geotagged with a precise coordinate return an empty str
+    if tweet['coordinates'] is None:
+        return ''
+
+    return '{}\t{}\t{}\t{}\t{}\n'.format(tweet['id'],
+                                         tweet['user']['id'],
+                                         iso_date(tweet['created_at']),
+                                         tweet['coordinates']['coordinates'],
+                                         sanitize(tweet['text'])
+                                         )
+
+
+def iso_date(date):
+    return str(datetime.strptime(date, '%a %b %d %H:%M:%S %z %Y').isoformat())
+
+
+def main(args):
+
+    '''
+    # args parameters
+    conf_auth_file = args[1]
+    conf_parameters_file = args[2]
+    '''
+
+    conf_auth_file = 'confs/auth.conf'
+    conf_parameters_file = 'confs/parameters.conf'
+
+    # WARNING : use of global variables
+    global out_file_name
+
+    pars = set_parameters(conf_parameters_file)
+
+    # set outfile path
+    out_file_name = os.path.abspath(pars['out_file'])
+
+    auth = authenticate(conf_auth_file)
+
+    # Instantiate the api object
+    api = tweepy.API(auth, wait_on_rate_limit=True,
+                     wait_on_rate_limit_notify=True,
+                     retry_delay=pars['retry_delay'],
+                     retry_errors=True,
+                     timeout=pars['timeout'])
+
+    # instantiate the listener and start the stream
+    collecter = GeoTweetsCollecter()
+    stream = tweepy.Stream(auth=api.auth, listener=collecter)
+
+    stream.filter(locations=pars['coordinates'])
+
+
+if __name__ == '__main__':
+    try:
+        sys.exit(main(sys.argv))
+    except (KeyboardInterrupt, SystemExit):
+        print('\nBye...')
