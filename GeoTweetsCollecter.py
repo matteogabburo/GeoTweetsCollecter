@@ -168,7 +168,7 @@ def authenticate(conf_file):
 
 def sanitize(s):
     '''
-    remove tabs
+    remove tabs and carriage return
     '''
     while '\t' in s or '\n' in s:
         s = s.replace('\t', ' ')
@@ -188,10 +188,13 @@ def scrape(raw):
     if tweet['coordinates'] is None:
         return ''
 
+    coordinates = '{},{}'.format(tweet['coordinates']['coordinates'][0],
+                                 tweet['coordinates']['coordinates'][1])
+
     return '{}\t{}\t{}\t{}\t{}\n'.format(tweet['id'],
                                          tweet['user']['id'],
                                          iso_date(tweet['created_at']),
-                                         tweet['coordinates']['coordinates'],
+                                         coordinates,
                                          sanitize(tweet['text'])
                                          )
 
