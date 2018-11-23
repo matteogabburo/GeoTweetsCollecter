@@ -5,6 +5,8 @@ from datetime import datetime
 
 # global parameters
 out_file_name = ''
+log_folder = 'log'
+log_file_name = 'GeoTweetsCollecter.log'
 
 
 class GeoTweetsCollecter(tweepy.StreamListener):
@@ -19,12 +21,16 @@ class GeoTweetsCollecter(tweepy.StreamListener):
             save(row)
 
     def on_error(self, status_code):
-        print('Error: status code ({})'.format(status_code))
-        return True
+        error = 'Error: status code ({})'.format(status_code)
+        print(error)
+        log(error)
+        return True  # not block in case of errors
 
     def on_timeout(self):
-        print('Timeout...')
-        return True
+        timeout = 'Timeout...'
+        print(timeout)
+        log(timeout)
+        return True  # not block in case of timeouts
 
 
 def save(row):
@@ -38,6 +44,29 @@ def save(row):
 
     with open(out_file_name, 'a') as f:
         f.write(row)
+
+
+def log(s):
+    '''
+    append a given string to the end of the log file
+    '''
+
+    global log_folder
+    global log_file_name
+
+    log_folder_path = os.path.abspath(log_folder)
+    if not os.path.isdir(log_folder_path):
+        os.mkdir(log_folder_path)
+
+    log_file_path = os.path.join(log_folder_path, log_file_name)
+
+    if not os.path.exists(log_file_path):
+        with open(log_file_path, 'a') as f:
+            f.write('date\tlog\n')
+
+    iso_date = datetime.now().isoformat()
+    with open(log_file_path, 'a') as f:
+        f.write("{}\t{}\n".format(iso_date, s))
 
 
 def set_parameters(conf_file):
