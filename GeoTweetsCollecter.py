@@ -185,11 +185,11 @@ def scrape(raw):
     tweet = raw._json
 
     # if tweet is not geotagged with a precise coordinate return an empty str
-    if tweet['coordinates'] is None:
+    if tweet['geo'] is None:
         return ''
 
-    coordinates = '{},{}'.format(tweet['coordinates']['coordinates'][0],
-                                 tweet['coordinates']['coordinates'][1])
+    coordinates = '{},{}'.format(tweet['geo']['coordinates'][0],
+                                 tweet['geo']['coordinates'][1])
 
     return '{}\t{}\t{}\t{}\t{}\n'.format(tweet['id'],
                                          tweet['user']['id'],
