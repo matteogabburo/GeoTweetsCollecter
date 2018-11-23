@@ -208,8 +208,9 @@ def main(args):
     conf_parameters_file = args[2]
     '''
 
-    conf_auth_file = 'confs/auth.conf'
-    conf_parameters_file = 'confs/parameters.conf'
+    home = os.path.abspath(os.path.dirname(sys.argv[0]))
+    conf_auth_file = os.path.join(home, 'confs/auth.conf')
+    conf_parameters_file = os.path.join(home, 'confs/parameters.conf')
 
     # WARNING : use of global variables
     global out_file_name
