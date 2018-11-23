@@ -171,8 +171,7 @@ def sanitize(s):
     remove tabs and carriage return
     '''
     while '\t' in s or '\n' in s:
-        s = s.replace('\t', ' ')
-        s = s.replace('\n', ' ')
+        s = s.replace('\t', ' ').replace('\n', ' ')
 
     return s
 
@@ -182,6 +181,7 @@ def scrape(raw):
     take in unput the raw json comes from the stream and return a line that
     represent the tweet where each field is separated by a tab
     '''
+    
     tweet = raw._json
 
     # if tweet is not geotagged with a precise coordinate return an empty str
@@ -191,12 +191,32 @@ def scrape(raw):
     coordinates = '{},{}'.format(tweet['geo']['coordinates'][0],
                                  tweet['geo']['coordinates'][1])
 
+    text = get_text(tweet)
+
     return '{}\t{}\t{}\t{}\t{}\n'.format(tweet['id'],
                                          tweet['user']['id'],
                                          iso_date(tweet['created_at']),
                                          coordinates,
-                                         sanitize(tweet['text'])
+                                         sanitize(text)
                                          )
+
+
+def get_text(tweet):
+    '''
+    extract text from the tweet. If the tweet is extendend tweet, it takes
+    the non-truncated field
+    '''
+
+    if 'retweeted_status' in tweet:
+        if 'extended_tweet' in tweet['retweeted_status']:
+            return tweet['retweeted_status']['extended_tweet']['full_text']
+        else:
+            return tweet['retweeted_status']['text']
+    else:
+        if 'extended_tweet' in tweet:
+            return tweet['extended_tweet']['full_text']
+        else:
+            return tweet['text']
 
 
 def iso_date(date):
