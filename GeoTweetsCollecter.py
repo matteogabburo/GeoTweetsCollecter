@@ -181,15 +181,15 @@ def scrape(raw):
     take in unput the raw json comes from the stream and return a line that
     represent the tweet where each field is separated by a tab
     '''
-    
     tweet = raw._json
 
     # if tweet is not geotagged with a precise coordinate return an empty str
-    if tweet['geo'] is None:
+    if tweet['coordinates'] is None:
         return ''
 
-    coordinates = '{},{}'.format(tweet['geo']['coordinates'][0],
-                                 tweet['geo']['coordinates'][1])
+    # indexes are inverted to have coordinates in the form [lat, lon]
+    coordinates = '{},{}'.format(tweet['coordinates']['coordinates'][1],
+                                 tweet['coordinates']['coordinates'][0])
 
     text = get_text(tweet)
 
