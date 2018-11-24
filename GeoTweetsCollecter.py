@@ -40,7 +40,7 @@ def save(row):
     appends the new tweet to the end of the dataset
     '''
 
-    header = 'id_tweet\tid_user\tcreation_data\tcoordinates\tlang\ttext\n'
+    header = 'id_tweet\tid_user\tcreation_date\tcoordinates\tlang\ttext\n'
     if not os.path.exists(out_file_name):
         with open(out_file_name, 'a') as f:
             f.write(header)
