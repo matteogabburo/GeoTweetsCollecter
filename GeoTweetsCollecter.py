@@ -38,9 +38,10 @@ def save(row):
     appends the new tweet to the end of the dataset
     '''
 
+    header = 'id_tweet\tid_user\tcreation_data\tcoordinates\tlang\ttext\n'
     if not os.path.exists(out_file_name):
         with open(out_file_name, 'a') as f:
-            f.write('id_tweet\tid_user\tcreation_data\tcoordinates\ttext\n')
+            f.write(header)
 
     with open(out_file_name, 'a') as f:
         f.write(row)
@@ -191,12 +192,18 @@ def scrape(raw):
     coordinates = '{},{}'.format(tweet['coordinates']['coordinates'][1],
                                  tweet['coordinates']['coordinates'][0])
 
+    # get tweet language if present
+    lang = 'und'
+    if 'lang' in tweet:
+        lang = tweet['lang']
+
     text = get_text(tweet)
 
     return '{}\t{}\t{}\t{}\t{}\n'.format(tweet['id'],
                                          tweet['user']['id'],
                                          iso_date(tweet['created_at']),
                                          coordinates,
+                                         lang,
                                          sanitize(text)
                                          )
 
