@@ -199,13 +199,13 @@ def scrape(raw):
 
     text = get_text(tweet)
 
-    return '{}\t{}\t{}\t{}\t{}{}\t{}\n'.format(tweet['id'],
-                                               tweet['user']['id'],
-                                               iso_date(tweet['created_at']),
-                                               coordinates,
-                                               lang,
-                                               sanitize(text)
-                                               )
+    return '{}\t{}\t{}\t{}\t{}\t{}\n'.format(tweet['id'],
+                                             tweet['user']['id'],
+                                             iso_date(tweet['created_at']),
+                                             coordinates,
+                                             lang,
+                                             sanitize(text)
+                                             )
 
 
 def get_text(tweet):
