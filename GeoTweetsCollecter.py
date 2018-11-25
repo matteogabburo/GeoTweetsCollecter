@@ -240,32 +240,37 @@ def main(args):
     conf_parameters_file = args[2]
     '''
 
-    home = os.path.abspath(os.path.dirname(sys.argv[0]))
-    conf_auth_file = os.path.join(home, 'confs/auth.conf')
-    conf_parameters_file = os.path.join(home, 'confs/parameters.conf')
+    while True:
+        try:
+            home = os.path.abspath(os.path.dirname(sys.argv[0]))
+            conf_auth_file = os.path.join(home, 'confs/auth.conf')
+            conf_parameters_file = os.path.join(home, 'confs/parameters.conf')
 
-    # WARNING : use of global variables
-    global out_file_name
+            # WARNING : use of global variables
+            global out_file_name
 
-    pars = set_parameters(conf_parameters_file)
+            pars = set_parameters(conf_parameters_file)
 
-    # set outfile path
-    out_file_name = os.path.abspath(pars['out_file'])
+            # set outfile path
+            out_file_name = os.path.abspath(pars['out_file'])
 
-    auth = authenticate(conf_auth_file)
+            auth = authenticate(conf_auth_file)
 
-    # Instantiate the api object
-    api = tweepy.API(auth, wait_on_rate_limit=True,
-                     wait_on_rate_limit_notify=True,
-                     retry_delay=pars['retry_delay'],
-                     retry_errors=True,
-                     timeout=pars['timeout'])
+            # Instantiate the api object
+            api = tweepy.API(auth, wait_on_rate_limit=True,
+                             wait_on_rate_limit_notify=True,
+                             retry_delay=pars['retry_delay'],
+                             retry_errors=True,
+                             timeout=pars['timeout'])
 
-    # instantiate the listener and start the stream
-    collecter = GeoTweetsCollecter()
-    stream = tweepy.Stream(auth=api.auth, listener=collecter)
+            # instantiate the listener and start the stream
+            collecter = GeoTweetsCollecter()
+            stream = tweepy.Stream(auth=api.auth, listener=collecter)
 
-    stream.filter(locations=pars['coordinates'])
+            stream.filter(locations=pars['coordinates'])
+        except Exception as e:
+            log('Connection error')
+            continue
 
 
 if __name__ == '__main__':
