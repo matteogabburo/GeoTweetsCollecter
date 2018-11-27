@@ -25,15 +25,15 @@ class GeoTweetsCollecter(tweepy.StreamListener):
             save(row)
 
     def on_error(self, status_code):
-        error = 'Error: status code ({})'.format(status_code)
-        print(error)
-        log(error)
+        error_msg = 'Error: status code ({})'.format(status_code)
+        print(error_msg)
+        log(error_msg)
         return True  # not block in case of errors
 
     def on_timeout(self):
-        timeout = 'Timeout...'
-        print(timeout)
-        log(timeout)
+        timeout_msg = 'Timeout...'
+        print(timeout_msg)
+        log(timeout_msg)
         return True  # not block in case of timeouts
 
 
