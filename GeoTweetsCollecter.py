@@ -277,12 +277,13 @@ def main(args):
             # instantiate the listener and start the stream
             collecter = GeoTweetsCollecter()
             stream = tweepy.Stream(auth=api.auth, listener=collecter)
-            # reset timeout 
+            # reset timeout
             timeout = 1
             stream.filter(locations=pars['coordinates'])
         except Exception as e:
+            timeout = e_backoff(timeout, exponential_backoff_limit)
             log('Connection error timeout {}'.format(timeout))
-            time.sleep(e_backoff(timeout, exponential_backoff_limit))
+            time.sleep(timeout)
             continue
 
 
