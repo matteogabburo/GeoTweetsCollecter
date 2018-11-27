@@ -233,6 +233,13 @@ def iso_date(date):
     return str(datetime.strptime(date, '%a %b %d %H:%M:%S %z %Y').isoformat())
 
 
+def e_backoff(timeout, exponential_backoff_limit):
+    timeout = timeout * 2
+    if timeout > exponential_backoff_limit:
+        timeout = exponential_backoff_limit
+    return timeout
+
+
 def main(args):
 
     '''
@@ -240,6 +247,9 @@ def main(args):
     conf_auth_file = args[1]
     conf_parameters_file = args[2]
     '''
+
+    timeout = 1
+    exponential_backoff_limit = 1024
 
     while True:
         try:
@@ -267,11 +277,12 @@ def main(args):
             # instantiate the listener and start the stream
             collecter = GeoTweetsCollecter()
             stream = tweepy.Stream(auth=api.auth, listener=collecter)
-
+            # reset timeout 
+            timeout = 1
             stream.filter(locations=pars['coordinates'])
         except Exception as e:
-            log('Connection error')
-            time.sleep(10)
+            log('Connection error timeout {}'.format(timeout))
+            time.sleep(e_backoff(timeout, exponential_backoff_limit))
             continue
 
 
