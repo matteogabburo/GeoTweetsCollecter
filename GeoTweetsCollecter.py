@@ -7,6 +7,7 @@ from datetime import datetime
 import time
 
 # global parameters
+timeout = 1
 out_file_name = ''
 log_folder = 'log'
 log_file_name = 'GeoTweetsCollecter.log'
@@ -40,6 +41,10 @@ def save(row):
     '''
     appends the new tweet to the end of the dataset
     '''
+
+    # timeout reset
+    global timeout
+    timeout = 1
 
     header = 'id_tweet\tid_user\tcreation_date\tcoordinates\tlang\ttext\n'
     if not os.path.exists(out_file_name):
@@ -248,6 +253,8 @@ def main(args):
     conf_parameters_file = args[2]
     '''
 
+    global timeout
+
     timeout = 1
     exponential_backoff_limit = 1024
 
@@ -277,12 +284,13 @@ def main(args):
             # instantiate the listener and start the stream
             collecter = GeoTweetsCollecter()
             stream = tweepy.Stream(auth=api.auth, listener=collecter)
-            # reset timeout
-            timeout = 1
+
             stream.filter(locations=pars['coordinates'])
         except Exception as e:
             timeout = e_backoff(timeout, exponential_backoff_limit)
-            log('Connection error timeout {}'.format(timeout))
+            mesg = 'Connection error timeout {}'.format(timeout)
+            print(mesg)
+            log(mesg)
             time.sleep(timeout)
             continue
 
