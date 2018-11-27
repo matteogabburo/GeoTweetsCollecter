@@ -4,6 +4,7 @@ import sys
 import os
 import tweepy
 from datetime import datetime
+import time
 
 # global parameters
 out_file_name = ''
@@ -270,6 +271,7 @@ def main(args):
             stream.filter(locations=pars['coordinates'])
         except Exception as e:
             log('Connection error')
+            time.sleep(10)
             continue
 
 
